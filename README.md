@@ -1,6 +1,6 @@
 # Discrete Choice Models for Credit Card Offers
 
-This repository contains the code and report for the JPMorgan MLCOE Challenge on *Discrete Choice Models for Credit Card Offers*. It is built on top of `choice-learn` framework and TensorFlow. It includes synthetic experiments, real-data experiments, baseline comparisons, and unit tests. 
+This repository contains the code and report for the JPMorgan MLCOE Challenge on *Discrete Choice Models for Credit Card Offers*. It is built on top of [`choice-learn`](https://github.com/artefactory/choice-learn) framework and TensorFlow. It includes synthetic experiments, real-data experiments, baseline comparisons, and unit tests. 
 
 
 
