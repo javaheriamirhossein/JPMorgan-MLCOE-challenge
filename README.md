@@ -1,54 +1,42 @@
 # Discrete Choice Models for Credit Card Offers
 
-This repository contains the code and report for the JPMorgan MLCOE Challenge on *Discrete Choice Models for Credit Card Offers*. It is built on top of [`choice-learn`](https://github.com/artefactory/choice-learn) framework and TensorFlow. It includes synthetic experiments, real-data experiments, baseline comparisons, and unit tests. 
+This repository contains the code and report for the JPMorgan MLCOE Challenge
+on Discrete Choice Models for Credit Card Offers. It is built on top of the
+[choice-learn](https://github.com/artefactory/choice-learn) framework and
+TensorFlow. It includes two packages corresponding to Part 1 and Part 2 of the
+challenge, baseline comparisons, and unit tests.
 
-
+---
 
 ## Repository Structure
 
-### Notebooks
 
-- **`Synthetic-data-generation.ipynb`** (answer (b))
-  - Generates synthetic datasets for DeepHalo in the *featureless* setting.  
+### Part 1 (`DeepHalo`)
+The files for the **DeepHalo** package are located in the `Part1/` folder.
+This package implements the context-dependent discrete choice model of Zhang
+et al. (2025), using a permutation-equivariant neural encoder to learn
+latent product embeddings from market-level data.
 
-- **`Synthetic-experiment.ipynb`**  (answers (b) and (c))
-  - Trains and evaluates DeepHalo on the synthetic *featureless* data.  
-  - Contains the synthetic experiment setup and metrics.
-
-- **`Real-experiment-ModeCanada.ipynb`**  (answer (c))
-  - Loads the ModeCanada dataset via `choice-learn`.  
-  - Trains and evaluates *featured* DeepHalo on this dataset.  
-
-- **`Real-experiment-SwissMetro.ipynb`**  (answer (c))
-  - Loads the SwissMetro dataset via `choice-learn`.  
-  - Trains and evaluates *featured* DeepHalo on this dataset.  
-
-- **`Comparison-with-baseline.ipynb`**  (answers (f)).
-  - Compares DeepHalo against:  
-    - Classical discrete choice models (e.g., MNL / conditional logit, nested/halo variants as implemented in `choice-learn`)  
-    - Machine-learning baselines (e.g., SVM, gradient boosting methods) 
-
-### DeepHalo Core Implementation
-
-The `DeepHalo/` folder contains the core model definitions:
-
-- **`DeepHalo_choice_learn.py`**  
-  - Defines the `DeepHaloChoiceModel` class integrating DeepHalo into the `choice-learn` API.  
-
-
-- **`Featured_DeepHalo.py`**  
-  - Implements the *featured* DeepHalo core network for inputs with item features. 
-
-
-- **`Featureless_DeepHalo.py`**  
-  - Implements the *featureless* DeepHalo core model.
-
-### Tests
-
-The `tests/` folder contains:
-
-- **`DeepHalo_Tests.py`**  
-  - Defines the `TestDeepHaloChoiceModel` class for unit tests  
+### Part 2 (`BayesianSparseDeepHalo`)
+The files for the **BayesianSparseDeepHalo** package are located in the
+`Part2/` folder. This package implements the Bayesian Sparse Random Logit
+model of Lu (2025), extended with a Monte Carlo EM loop that jointly trains
+the DeepHalo encoder with the Bayesian sparse sampler.
 
 ---
+
+## Dependencies
+
+- Python ≥ 3.10
+- [choice-learn](https://github.com/artefactory/choice-learn) ≥ 0.2
+- TensorFlow ≥ 2.12
+- NumPy ≥ 1.24
+- SciPy ≥ 1.10
+
+---
+
+## References
+
+- Z. Lu and K. Shimizu (2025), [*Estimating Discrete Choice Demand Models with Sparse Market-Product Shock*](https://arxiv.org/abs/2501.02381v2).
+- S. Zhang, Z. Wang, R. Gao, and S. Li (2025), [*Deep context-dependent choice model*](https://openreview.net/forum?id=bXTBtUjb0c).
 
