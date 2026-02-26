@@ -23,8 +23,21 @@ The files for the **BayesianSparseDeepHalo** package are located in the
 model of Lu (2025), extended with a Monte Carlo EM loop that jointly trains
 the DeepHalo encoder with the Bayesian sparse sampler.
 
----
 
+---
+## Installing the packages (Part1 and Part2)
+Run these from the repository root:
+
+```bash
+# Part 1: DeepHalo
+python -m pip install -e Part1
+
+# Part 2: BayesianSparseDeepHalo
+python -m pip install -e Part2
+
+```
+
+---
 ## Dependencies
 
 - Python ≥ 3.10
