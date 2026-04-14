@@ -7,11 +7,13 @@
 Synthetic data generation for discrete choice experiments.
 
 - **`SimParams`** — dataclass holding all DGP hyperparameters
+- **`MCMCParams`** — dataclass holding MCMC sampler hyperparameters
 - **`generate_data_tf(dgp_type, sim)`** — generates market-level choice data
   under four DGP types (1–4) that vary in the sparsity and endogeneity
   structure. Returns a raw numpy dict for the MCMC runner, a
   `ChoiceDataset` for choice-learn, and a dict of true parameters.
-
+- **`generate_teacher_dgp(sim, encoder_kwarg, beta_star, r_star)`** — generates context-dependent
+  market-level choice data based on the given encoder, simulation, and heterogeneous taste parameters.
 ---
 
 ### `BLP.py`
@@ -39,25 +41,12 @@ Context-dependent neural encoder based on Zhang et al. (2025).
 ---
 
 ### `LuSparseRandomLogit.py`
-Bayesian Sparse Random Logit MCMC sampler, following Lu (2025).
-
+Bayesian Sparse Random Logit MCMC sampler implemented with [`tfp.mcmcm`](https://www.tensorflow.org/probability/api_docs/python/tfp/mcmc), following Lu (2025).
+We use Random Walk Metropolis-Hastings (RWMH) for beta_bar, r_vec, xi_bar, eta, phi (continuous variables) 
+and exact Gibbs sampling with `tfmcmc.TransitionKernel` for gamma.   
 - **`BayesianSparseRandomLogit`** — main model class. Implements a full
-  posterior sampler of the Lu(2025) method. Supports
-  `beta_method="rwmh"` (Random Walk MH) and `beta_method="tmh"` (Tailored MH
-  using a Newton–Raphson mode-finding proposal).
-- **`mh_update_beta_cl`** — RWMH step for β̄; proposal scale controlled by
-  `mcmc_params.step_beta`.
-- **`tmh_update_beta_cl`** — TMH step for β̄; proposal covariance scale
-  controlled by `mcmc_params.kappa_beta`.
-- **`mh_update_xi_cl`** — MH step for market-level mean quality ξ̄.
-- **`mh_update_r_cl`** — MH step for random coefficient scales r.
-- **`gibbs_update_gamma_phi_tf`** — Gibbs step for spike-and-slab inclusion
-  indicators γ and sparsity probability φ.
-- **`adapt_step_size`** — Robbins–Monro step-size adaptation based on
-  empirical acceptance rate.
-- **`calibrate_stepsizes_cl`** — runs a short pilot chain and adapts all step
-  sizes before the main MCMC run.
-
+  posterior sampler of the Lu(2025) method. 
+- **`GammaGibbsKernel`** — Exact Gibbs sampler for the binary spike-and-slab inclusion matrix gamma.
 ---
 
 ### `DeepHalo_MCEM_Core.py`
@@ -80,13 +69,9 @@ Bayesian Sparse logit model.
 
 ## Notebooks
 
-### `Lu_Bayesian_Sparse_rwmh.ipynb`
+### `Lu_Bayesian_Sparse_Demo.ipynb`
 Replicates Section 4 of Lu (2025). Runs the Bayesian Sparse Random Logit MCMC
-sampler on simulated data under the four DGP types, comparing the two beta
-update methods:
-- **RWMH** (`beta_method="rwmh"`) — random walk Metropolis-Hasting scaled by
-  `step_beta`.
-- **TMH** (`beta_method="tmh"`) — tailored Metropolis-Hasting scaled by `kappa_beta`.
+sampler on simulated data under the four DGP types.
 
 Produces MCMC trace plots, posterior summaries, and acceptance rate diagnostics
 for each method. Corresponds to **answer (b)** of the assignment.
@@ -104,9 +89,8 @@ posterior parameter estimates. Corresponds to **answer (d)** of the assignment.
 ---
 
 ### `Tests.ipynb`
-Interactive test runner for the `BayesianSparseDeepHalo` package. Executes the
-full test suite in `tests/Bayesian_Sparse_Deephalo_Tests.py` (92 tests across
-16 classes) directly from a Jupyter cell using:
+Comprehensive test suite for the `BayesianSparseDeepHalo` package. Executes the
+full test suite for all the modules in `tests` folder. The tests can also be directly run from a terminal as:
 
 ```python
-!python -m pytest tests/Bayesian_Sparse_Deephalo_Tests.py -v
+python -m pytest tests -v
