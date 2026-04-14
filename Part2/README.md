@@ -80,13 +80,9 @@ Bayesian Sparse logit model.
 
 ## Notebooks
 
-### `Lu_Bayesian_Sparse_rwmh.ipynb`
+### `Lu_Bayesian_Sparse_Demo.ipynb`
 Replicates Section 4 of Lu (2025). Runs the Bayesian Sparse Random Logit MCMC
-sampler on simulated data under the four DGP types, comparing the two beta
-update methods:
-- **RWMH** (`beta_method="rwmh"`) — random walk Metropolis-Hasting scaled by
-  `step_beta`.
-- **TMH** (`beta_method="tmh"`) — tailored Metropolis-Hasting scaled by `kappa_beta`.
+sampler on simulated data under the four DGP types.
 
 Produces MCMC trace plots, posterior summaries, and acceptance rate diagnostics
 for each method. Corresponds to **answer (b)** of the assignment.
@@ -104,9 +100,8 @@ posterior parameter estimates. Corresponds to **answer (d)** of the assignment.
 ---
 
 ### `Tests.ipynb`
-Interactive test runner for the `BayesianSparseDeepHalo` package. Executes the
-full test suite in `tests/Bayesian_Sparse_Deephalo_Tests.py` (92 tests across
-16 classes) directly from a Jupyter cell using:
+Comprehensive test suite for the `BayesianSparseDeepHalo` package. Executes the
+full test suite for all the modules in `tests` folder. The tests can also be directly run from a terminal as:
 
 ```python
-!python -m pytest tests/Bayesian_Sparse_Deephalo_Tests.py -v
+python -m pytest tests -v
