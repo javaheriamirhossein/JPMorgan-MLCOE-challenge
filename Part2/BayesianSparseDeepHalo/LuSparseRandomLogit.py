@@ -87,7 +87,7 @@ class GammaGibbsKernel(tfmcmc.TransitionKernel):
 
     def one_step(
         self,
-        current_gamma: tf.Tensor,   # shape: [T_unique, J], dtype=tf.int32
+        current_gamma: tf.Tensor,   # shape: [T_unique, J], dtype=tf.int64
         previous_kernel_results,
         seed=None
     ):
@@ -102,7 +102,7 @@ class GammaGibbsKernel(tfmcmc.TransitionKernel):
 
         Returns
         -------
-        new_gamma : tf.Tensor, shape [T_unique, J], dtype=tf.int32
+        new_gamma : tf.Tensor, shape [T_unique, J], dtype=tf.int64
         previous_kernel_results : unchanged (Gibbs needs no bookkeeping)
         """
         # Clip phi to avoid log(0) numerical errors
@@ -138,8 +138,8 @@ class GammaGibbsKernel(tfmcmc.TransitionKernel):
             # Use stateless variant for reproducibility when TFP provides a seed tensor
             rand_u = tf.random.stateless_uniform(tf.shape(prob1), seed=seed, dtype=tf.float64)
 
-        # Cast boolean mask to int32: 1 = active (Slab), 0 = inactive (Spike)
-        new_gamma = tf.cast(rand_u < prob1, tf.int32)  # shape: [T_unique, J]
+        # Cast boolean mask to int64: 1 = active (Slab), 0 = inactive (Spike)
+        new_gamma = tf.cast(rand_u < prob1, tf.int64)  # shape: [T_unique, J]
         return new_gamma, previous_kernel_results
 
     def bootstrap_results(self, init_state):
@@ -256,9 +256,9 @@ class BayesianSparseRandomLogit(ChoiceModel):
         # Extract market IDs from shared features
         s = tf.convert_to_tensor(shared_features_by_choice)
         if len(s.shape) == 1:
-            market_ids = tf.cast(s, tf.int32)
+            market_ids = tf.cast(s, tf.int64)
         else:
-            market_ids = tf.cast(s[:, 0], tf.int32)
+            market_ids = tf.cast(s[:, 0], tf.int64)
 
         # Map raw market IDs to contiguous indices 0..T_unique-1
         if isinstance(self._market_id_map, tf.Tensor):
@@ -428,7 +428,7 @@ class BayesianSparseRandomLogit(ChoiceModel):
         updated_kr = current_kr._replace(inner_results=fresh_inner)
         new_beta, next_kr = self.beta_kernel.one_step(self.beta_bar.read_value(), updated_kr)
         self.beta_bar.assign(new_beta)
-        return next_kr, tf.cast(next_kr.inner_results.is_accepted, tf.int32)
+        return next_kr, tf.cast(next_kr.inner_results.is_accepted, tf.int64)
 
     @tf.function(jit_compile=True, reduce_retracing=True)
     def _step_r(self, current_kr):
@@ -441,7 +441,7 @@ class BayesianSparseRandomLogit(ChoiceModel):
         updated_kr = current_kr._replace(inner_results=fresh_inner)
         new_r, next_kr = self.r_kernel.one_step(self.r_vec.read_value(), updated_kr)
         self.r_vec.assign(new_r)
-        return next_kr, tf.cast(next_kr.inner_results.is_accepted, tf.int32)
+        return next_kr, tf.cast(next_kr.inner_results.is_accepted, tf.int64)
 
     @tf.function(jit_compile=True, reduce_retracing=True)
     def _step_xi(self, current_kr):
@@ -454,7 +454,7 @@ class BayesianSparseRandomLogit(ChoiceModel):
         updated_kr = current_kr._replace(inner_results=fresh_inner)
         new_xi, next_kr = self.xi_kernel.one_step(self.xi_bar.read_value(), updated_kr)
         self.xi_bar.assign(new_xi)
-        return next_kr, tf.cast(tf.reduce_sum(tf.cast(next_kr.inner_results.is_accepted, tf.int32)), tf.int32)
+        return next_kr, tf.cast(tf.reduce_sum(tf.cast(next_kr.inner_results.is_accepted, tf.int64)), tf.int64)
 
     @tf.function(jit_compile=True, reduce_retracing=True)
     def _step_eta(self, current_kr):
@@ -468,7 +468,7 @@ class BayesianSparseRandomLogit(ChoiceModel):
         updated_kr = current_kr._replace(inner_results=fresh_inner)
         new_eta, next_kr = self.eta_kernel.one_step(self.eta.read_value(), updated_kr)
         self.eta.assign(new_eta)
-        return next_kr, tf.cast(tf.reduce_sum(tf.cast(next_kr.inner_results.is_accepted, tf.int32)), tf.int32)
+        return next_kr, tf.cast(tf.reduce_sum(tf.cast(next_kr.inner_results.is_accepted, tf.int64)), tf.int64)
 
     @tf.function(jit_compile=True, reduce_retracing=True)
     def _step_phi(self, current_kr):
@@ -484,7 +484,7 @@ class BayesianSparseRandomLogit(ChoiceModel):
         self.z_phi.assign(new_z_phi)
         # Sync the constrained phi variable with the new logit value
         self.phi.assign(tf.math.sigmoid(new_z_phi))
-        return next_kr, tf.cast(next_kr.inner_results.is_accepted, tf.int32)
+        return next_kr, tf.cast(next_kr.inner_results.is_accepted, tf.int64)
 
     @tf.function(jit_compile=True, reduce_retracing=True)
     def _step_gamma(self):
@@ -497,7 +497,7 @@ class BayesianSparseRandomLogit(ChoiceModel):
         gamma_kr = self.gamma_kernel.bootstrap_results(self.gamma.read_value())
         new_gamma, _ = self.gamma_kernel.one_step(self.gamma.read_value(), gamma_kr)
         # Count number of indicators that changed (0->1 or 1->0) this step
-        acc_gamma = tf.reduce_sum(tf.cast(tf.not_equal(new_gamma, self.gamma.read_value()), tf.int32))
+        acc_gamma = tf.reduce_sum(tf.cast(tf.not_equal(new_gamma, self.gamma.read_value()), tf.int64))
         self.gamma.assign(new_gamma)
         return acc_gamma
 
@@ -555,14 +555,14 @@ class BayesianSparseRandomLogit(ChoiceModel):
 
         # Build a fast lookup array: raw_market_id -> contiguous index
         max_mid = int(np.max(unique_market_ids))
-        lookup = -np.ones((max_mid + 1,), dtype=np.int32)
-        lookup[unique_market_ids] = np.arange(self._T_unique, dtype=np.int32)
-        self._market_id_map = tf.constant(lookup, dtype=tf.int32)
+        lookup = -np.ones((max_mid + 1,), dtype=np.int64)
+        lookup[unique_market_ids] = np.arange(self._T_unique, dtype=np.int64)
+        self._market_id_map = tf.constant(lookup, dtype=tf.int64)
 
         # Aggregate choice counts: counts[t, j] = number of times product j was chosen in market t
         mid_contig = lookup[market_ids_full]
         pairs = np.stack([mid_contig, choices_full], axis=1)
-        counts = np.zeros((self._T_unique, self.J + 1), dtype=np.int32)
+        counts = np.zeros((self._T_unique, self.J + 1), dtype=np.int64)
         np.add.at(counts, (pairs[:, 0], pairs[:, 1]), 1)
         self.unique_counts = tf.constant(counts, dtype=tf.float64)  # [T_unique, J+1]
 
@@ -608,7 +608,7 @@ class BayesianSparseRandomLogit(ChoiceModel):
         self.xi_bar = tf.Variable(tf.zeros((self._T_unique,), dtype=tf.float64))                      # [T_unique]
         self.eta = tf.Variable(tf.zeros((self._T_unique, self.J), dtype=tf.float64))                  # [T_unique, J]
         self.phi = tf.Variable(tf.fill((self._T_unique,), tf.constant(0.5, tf.float64)))              # [T_unique]
-        self.gamma = tf.Variable(tf.zeros((self._T_unique, self.J), dtype=tf.int32))                  # [T_unique, J]
+        self.gamma = tf.Variable(tf.zeros((self._T_unique, self.J), dtype=tf.int64))                  # [T_unique, J]
 
         # z_phi is the logit-transformed phi; used as the unconstrained state for the RWMH kernel
         phi0 = tf.clip_by_value(self.phi.read_value(), 1e-6, 1.0 - 1e-6)
